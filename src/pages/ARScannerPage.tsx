@@ -1,45 +1,41 @@
 import { useState } from "react";
 import { Header } from "@/components/Header";
-import { Camera, Scan, Info, Lightbulb } from "lucide-react";
+import { FaceExpressionDetector } from "@/components/FaceExpressionDetector";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { 
+  Camera, 
+  Scan, 
+  CheckCircle, 
+  RefreshCw, 
+  Info,
+  Lightbulb,
+  ArrowLeft,
+  Smile,
+  Eye
+} from "lucide-react";
 
 interface ARScannerPageProps {
   onBack: () => void;
 }
 
-export const ARScannerPage = ({ onBack }: ARScannerPageProps) => {
+interface DetectedExpression {
+  emotion: string;
+  confidence: number;
+  timestamp: Date;
+}
+
+const ARScannerPage = ({ onBack }: ARScannerPageProps) => {
   const [isScanning, setIsScanning] = useState(false);
   const [scannedObject, setScannedObject] = useState<string | null>(null);
+  const [detectedExpressions, setDetectedExpressions] = useState<DetectedExpression[]>([]);
 
   const simulatedObjects = [
-    {
-      name: "TV Remote Control",
-      description: "This is a television remote control. Use it to change channels, adjust volume, and control your TV. The power button is usually at the top, volume buttons on the side.",
-      tips: [
-        "Point it directly at your TV",
-        "Press firmly on buttons",
-        "Check if batteries need replacing if not working"
-      ]
-    },
-    {
-      name: "Smartphone",
-      description: "This is a mobile phone or smartphone. You can make calls, send messages, take photos, and connect to the internet with this device.",
-      tips: [
-        "Press and hold the power button to turn on/off",
-        "Swipe up from bottom to go home",
-        "Touch icons gently - no need to press hard"
-      ]
-    },
-    {
-      name: "Microwave",
-      description: "This is a microwave oven for heating food quickly. Always use microwave-safe containers and follow cooking instructions.",
-      tips: [
-        "Set the time using number buttons",
-        "Press Start to begin heating",
-        "Use microwave-safe containers only"
-      ]
-    }
+    "Smartphone", "Laptop", "Television", "Router", "Tablet", 
+    "Smart Watch", "Headphones", "Gaming Console", "Printer", "Camera",
+    "Smart Speaker", "Fitness Tracker", "Keyboard", "Mouse", "Webcam"
   ];
 
   const handleStartScan = () => {
@@ -49,152 +45,245 @@ export const ARScannerPage = ({ onBack }: ARScannerPageProps) => {
     // Simulate scanning process
     setTimeout(() => {
       const randomObject = simulatedObjects[Math.floor(Math.random() * simulatedObjects.length)];
-      setScannedObject(randomObject.name);
+      setScannedObject(randomObject);
       setIsScanning(false);
     }, 3000);
   };
 
-  const getObjectInfo = () => {
-    return simulatedObjects.find(obj => obj.name === scannedObject);
+  const handleExpressionDetected = (expression: DetectedExpression) => {
+    setDetectedExpressions(prev => {
+      const newExpressions = [expression, ...prev].slice(0, 10); // Keep last 10 expressions
+      return newExpressions;
+    });
+  };
+
+  const getObjectInfo = (objectName: string) => {
+    const objectsInfo: Record<string, { description: string; tips: string[] }> = {
+      "Smartphone": {
+        description: "A mobile device for calls, messaging, internet, and apps. Modern smartphones have touchscreens and powerful processors.",
+        tips: [
+          "Swipe up from bottom to go home",
+          "Touch gently - no need to press hard",
+          "Use voice assistant for hands-free control",
+          "Adjust brightness for easier reading"
+        ]
+      },
+      "Laptop": {
+        description: "A portable computer for work, entertainment, and communication. Perfect for typing, browsing, and video calls.",
+        tips: [
+          "Keep it on a hard, flat surface for ventilation",
+          "Close unused programs to improve speed",
+          "Use trackpad with light touches",
+          "Adjust screen brightness for comfort"
+        ]
+      },
+      "Television": {
+        description: "A display device for watching shows, movies, and connecting other devices. Modern TVs can connect to the internet.",
+        tips: [
+          "Use the remote control to navigate menus",
+          "Try voice commands if available",
+          "Adjust volume with + and - buttons",
+          "Use input/source button to switch devices"
+        ]
+      }
+    };
+
+    return objectsInfo[objectName] || {
+      description: "A technology device that can help make your life easier with proper understanding.",
+      tips: [
+        "Read the user manual for specific instructions",
+        "Start with basic functions before exploring advanced features",
+        "Ask for help from family or friends if needed",
+        "Practice using it regularly to build confidence"
+      ]
+    };
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      <Header title="Object Scanner" onBack={onBack} showBack />
+    <div className="min-h-screen bg-background pb-20">
+      <Header title="AI-Powered Scanner" onBack={onBack} showBack />
       
-      <div className="container mx-auto px-4 py-6">
-        {!isScanning && !scannedObject && (
-          <div className="text-center space-y-6">
-            <div className="bg-gradient-to-br from-primary-light to-accent p-8 rounded-2xl text-white">
-              <Camera size={64} className="mx-auto mb-4" />
-              <h2 className="text-2xl-accessible font-bold mb-3">
-                Smart Object Scanner
-              </h2>
-              <p className="text-lg leading-relaxed">
-                Point your camera at any object to learn how to use it
-              </p>
-            </div>
+      <main className="max-w-2xl mx-auto px-4 py-8 space-y-6">
+        <Tabs defaultValue="expressions" className="space-y-6">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="expressions" className="flex items-center gap-2">
+              <Smile className="w-4 h-4" />
+              Face Expressions
+            </TabsTrigger>
+            <TabsTrigger value="objects" className="flex items-center gap-2">
+              <Eye className="w-4 h-4" />
+              Object Detection
+            </TabsTrigger>
+          </TabsList>
 
-            <Card className="p-6">
-              <div className="flex items-start space-x-4">
-                <div className="bg-primary/10 p-3 rounded-full">
-                  <Info size={24} className="text-primary" />
-                </div>
-                <div className="text-left">
-                  <h3 className="text-xl-accessible font-semibold mb-2">
-                    How it works
-                  </h3>
-                  <ul className="text-base space-y-2 text-muted-foreground">
-                    <li>• Tap "Start Scanner" below</li>
-                    <li>• Point your camera at any device</li>
-                    <li>• Get instant help and tips</li>
-                  </ul>
-                </div>
-              </div>
-            </Card>
-
-            <Button
-              onClick={handleStartScan}
-              size="lg"
-              className="w-full h-16 text-xl bg-primary hover:bg-primary/90"
-            >
-              <Scan size={24} className="mr-3" />
-              Start Scanner
-            </Button>
-          </div>
-        )}
-
-        {isScanning && (
-          <div className="text-center space-y-6">
-            <div className="bg-card p-8 rounded-2xl border-2 border-dashed border-primary">
-              <div className="animate-pulse">
-                <Scan size={64} className="mx-auto text-primary mb-4" />
-                <h2 className="text-2xl-accessible font-bold mb-3">
-                  Scanning...
-                </h2>
-                <p className="text-lg text-muted-foreground">
-                  Hold your camera steady and point at the object
-                </p>
-              </div>
-            </div>
+          <TabsContent value="expressions" className="space-y-6">
+            <FaceExpressionDetector onExpressionDetected={handleExpressionDetected} />
             
-            <div className="bg-primary/5 p-4 rounded-lg">
-              <p className="text-base text-muted-foreground">
-                Make sure the object is well-lit and clearly visible
-              </p>
-            </div>
-          </div>
-        )}
-
-        {scannedObject && (
-          <div className="space-y-6">
-            <Card className="p-6 bg-gradient-to-br from-accent/10 to-primary/10">
-              <div className="text-center mb-6">
-                <div className="bg-accent p-4 rounded-full w-fit mx-auto mb-4">
-                  <Info size={32} className="text-white" />
-                </div>
-                <h2 className="text-2xl-accessible font-bold text-foreground">
-                  Object Identified!
-                </h2>
-              </div>
-              
-              {(() => {
-                const objectInfo = getObjectInfo();
-                if (!objectInfo) return null;
-                
-                return (
-                  <div className="space-y-6">
-                    <div>
-                      <h3 className="text-xl-accessible font-bold mb-3 text-center">
-                        {objectInfo.name}
-                      </h3>
-                      <p className="text-base leading-relaxed text-center">
-                        {objectInfo.description}
-                      </p>
-                    </div>
-
-                    <Card className="p-4">
-                      <div className="flex items-start space-x-3">
-                        <div className="bg-primary/10 p-2 rounded-full">
-                          <Lightbulb size={20} className="text-primary" />
-                        </div>
-                        <div>
-                          <h4 className="font-semibold mb-2">How to use it:</h4>
-                          <ul className="space-y-1">
-                            {objectInfo.tips.map((tip, index) => (
-                              <li key={index} className="text-sm">
-                                • {tip}
-                              </li>
-                            ))}
-                          </ul>
-                        </div>
+            {detectedExpressions.length > 0 && (
+              <Card className="p-6 space-y-4">
+                <h3 className="text-xl-accessible font-semibold text-foreground">
+                  Expression History
+                </h3>
+                <div className="space-y-2 max-h-64 overflow-y-auto">
+                  {detectedExpressions.map((expr, index) => (
+                    <div key={index} className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
+                      <div className="flex items-center gap-3">
+                        <Badge variant="outline">
+                          {expr.emotion}
+                        </Badge>
+                        <span className="text-sm text-muted-foreground">
+                          {expr.confidence}% confidence
+                        </span>
                       </div>
-                    </Card>
+                      <span className="text-xs text-muted-foreground">
+                        {expr.timestamp.toLocaleTimeString()}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </Card>
+            )}
+          </TabsContent>
 
-                    <div className="flex space-x-3">
-                      <Button
-                        onClick={handleStartScan}
-                        variant="outline"
-                        size="lg"
-                        className="flex-1"
-                      >
-                        Scan Another
-                      </Button>
-                      <Button
-                        onClick={() => setScannedObject(null)}
-                        size="lg"
-                        className="flex-1"
-                      >
-                        Done
-                      </Button>
+          <TabsContent value="objects" className="space-y-6">
+            {!isScanning && !scannedObject && (
+              <Card className="p-8 text-center space-y-6">
+                <div className="space-y-4">
+                  <div className="w-20 h-20 mx-auto bg-primary/10 rounded-full flex items-center justify-center">
+                    <Camera size={40} className="text-primary" />
+                  </div>
+                  <div>
+                    <h2 className="text-xl-accessible font-semibold text-foreground mb-2">
+                      Object Scanner
+                    </h2>
+                    <p className="text-muted-foreground leading-relaxed">
+                      Point your camera at any tech device to learn more about it and get helpful tips
+                    </p>
+                  </div>
+                </div>
+                
+                <Button 
+                  onClick={handleStartScan}
+                  size="lg"
+                  className="touch-target w-full"
+                >
+                  <Scan className="w-5 h-5 mr-2" />
+                  Start Object Scanning
+                </Button>
+              </Card>
+            )}
+
+            {isScanning && (
+              <Card className="p-8 text-center space-y-6">
+                <div className="space-y-4">
+                  <div className="w-20 h-20 mx-auto bg-primary/10 rounded-full flex items-center justify-center animate-pulse">
+                    <RefreshCw size={40} className="text-primary animate-spin" />
+                  </div>
+                  <div>
+                    <h2 className="text-xl-accessible font-semibold text-foreground mb-2">
+                      Scanning Device...
+                    </h2>
+                    <p className="text-muted-foreground">
+                      Hold steady while we identify your device
+                    </p>
+                  </div>
+                </div>
+                
+                <div className="w-full bg-muted rounded-full h-3 overflow-hidden">
+                  <div className="bg-primary h-full rounded-full animate-pulse" style={{ width: '60%' }}></div>
+                </div>
+              </Card>
+            )}
+
+            {scannedObject && !isScanning && (
+              <div className="space-y-6">
+                <Card className="p-6 space-y-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
+                      <CheckCircle size={24} className="text-green-600" />
+                    </div>
+                    <div>
+                      <h2 className="text-xl-accessible font-semibold text-foreground">
+                        Device Identified!
+                      </h2>
+                      <Badge variant="secondary" className="mt-1">
+                        {scannedObject}
+                      </Badge>
                     </div>
                   </div>
-                );
-              })()}
-            </Card>
+                  
+                  <div className="bg-muted/50 p-4 rounded-lg">
+                    <p className="text-foreground leading-relaxed">
+                      {getObjectInfo(scannedObject).description}
+                    </p>
+                  </div>
+                </Card>
+
+                <Card className="p-6 space-y-4">
+                  <div className="flex items-center gap-2">
+                    <Lightbulb className="w-5 h-5 text-accent" />
+                    <h3 className="text-lg font-semibold text-foreground">Usage Tips</h3>
+                  </div>
+                  <ul className="space-y-2">
+                    {getObjectInfo(scannedObject).tips.map((tip, index) => (
+                      <li key={index} className="flex items-start gap-3">
+                        <div className="w-2 h-2 bg-primary rounded-full mt-2 flex-shrink-0"></div>
+                        <span className="text-muted-foreground leading-relaxed">{tip}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </Card>
+
+                <div className="flex gap-3">
+                  <Button 
+                    onClick={() => {
+                      setScannedObject(null);
+                      handleStartScan();
+                    }}
+                    variant="outline"
+                    size="lg"
+                    className="flex-1 touch-target"
+                  >
+                    <Scan className="w-5 h-5 mr-2" />
+                    Scan Another
+                  </Button>
+                  <Button 
+                    onClick={() => setScannedObject(null)}
+                    size="lg"
+                    className="flex-1 touch-target"
+                  >
+                    <CheckCircle className="w-5 h-5 mr-2" />
+                    Done
+                  </Button>
+                </div>
+              </div>
+            )}
+          </TabsContent>
+        </Tabs>
+
+        <Card className="p-6 space-y-4">
+          <div className="flex items-center gap-2">
+            <Info className="w-5 h-5 text-primary" />
+            <h3 className="text-lg font-semibold text-foreground">AI Features</h3>
           </div>
-        )}
-      </div>
+          <ul className="space-y-2 text-muted-foreground">
+            <li className="flex items-start gap-3">
+              <div className="w-2 h-2 bg-primary rounded-full mt-2 flex-shrink-0"></div>
+              <span>Real-time facial expression recognition with AI emotion detection</span>
+            </li>
+            <li className="flex items-start gap-3">
+              <div className="w-2 h-2 bg-primary rounded-full mt-2 flex-shrink-0"></div>
+              <span>Smart object identification using computer vision technology</span>
+            </li>
+            <li className="flex items-start gap-3">
+              <div className="w-2 h-2 bg-primary rounded-full mt-2 flex-shrink-0"></div>
+              <span>Personalized tips and guidance powered by machine learning</span>
+            </li>
+          </ul>
+        </Card>
+      </main>
     </div>
   );
 };
+
+export default ARScannerPage;

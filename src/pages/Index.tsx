@@ -1,9 +1,13 @@
 import { useState } from "react";
+import { Header } from "@/components/Header";
 import { NavigationCard } from "@/components/NavigationCard";
+import { BottomNavigation } from "@/components/BottomNavigation";
+import { Button } from "@/components/ui/button";
+import { BookOpen, MessageCircle, Camera, Phone, Settings, LifeBuoy } from "lucide-react";
 import { TutorialsPage } from "./TutorialsPage";
 import { ChatbotPage } from "./ChatbotPage";
-import { ARScannerPage } from "./ARScannerPage";
-import { BookOpen, MessageCircle, Scan, Settings, Heart } from "lucide-react";
+import ARScannerPage from "./ARScannerPage";
+import SettingsPage from "./SettingsPage";
 
 type Page = 'home' | 'tutorials' | 'chatbot' | 'scanner' | 'settings';
 
@@ -12,115 +16,104 @@ const Index = () => {
 
   const navigationItems = [
     {
-      id: 'tutorials' as Page,
-      title: "Learning Tutorials",
-      description: "Step-by-step guides to master your device",
+      title: "Learn Technology",
+      description: "Step-by-step tutorials for smartphones and computers",
       icon: BookOpen,
+      page: 'tutorials' as const,
+      gradient: false
+    },
+    {
+      title: "AI Assistant",
+      description: "Get instant help with your technology questions",
+      icon: MessageCircle,
+      page: 'chatbot' as const,
       gradient: true
     },
     {
-      id: 'chatbot' as Page,
-      title: "Ask Tech Helper",
-      description: "Get instant answers to your tech questions",
-      icon: MessageCircle,
-      gradient: false
-    },
-    {
-      id: 'scanner' as Page,
-      title: "Object Scanner",
-      description: "Point camera at objects to learn how to use them",
-      icon: Scan,
-      gradient: false
-    },
-    {
-      id: 'settings' as Page,
-      title: "Settings",
-      description: "Adjust text size and accessibility options",
-      icon: Settings,
+      title: "Face & Object Scanner",
+      description: "AI-powered facial expression and object detection",
+      icon: Camera,
+      page: 'scanner' as const,
       gradient: false
     }
   ];
 
-  if (currentPage === 'tutorials') {
-    return <TutorialsPage onBack={() => setCurrentPage('home')} />;
-  }
+  const renderCurrentPage = () => {
+    switch (currentPage) {
+      case 'tutorials':
+        return <TutorialsPage onBack={() => setCurrentPage('home')} />;
+      case 'chatbot':
+        return <ChatbotPage onBack={() => setCurrentPage('home')} />;
+      case 'scanner':
+        return <ARScannerPage onBack={() => setCurrentPage('home')} />;
+      case 'settings':
+        return <SettingsPage onBack={() => setCurrentPage('home')} />;
+      default:
+        return (
+          <div className="min-h-screen bg-background pb-20">
+            <Header title="AI-Powered TechGuide" />
+            
+            <main className="max-w-2xl mx-auto px-4 py-8 space-y-8">
+              <div className="text-center space-y-4">
+                <h1 className="text-3xl-accessible font-bold text-foreground">
+                  Smart TechGuide
+                </h1>
+                <p className="text-xl text-muted-foreground leading-relaxed">
+                  AI facial recognition, smart chat assistant, and tech tutorials in a mobile-friendly app
+                </p>
+              </div>
 
-  if (currentPage === 'chatbot') {
-    return <ChatbotPage onBack={() => setCurrentPage('home')} />;
-  }
+              <div className="grid gap-6">
+                {navigationItems.map((item, index) => (
+                  <NavigationCard
+                    key={index}
+                    title={item.title}
+                    description={item.description}
+                    icon={item.icon}
+                    gradient={item.gradient}
+                    onClick={() => setCurrentPage(item.page)}
+                  />
+                ))}
+              </div>
 
-  if (currentPage === 'scanner') {
-    return <ARScannerPage onBack={() => setCurrentPage('home')} />;
-  }
+              <div className="space-y-4">
+                <h2 className="text-xl-accessible font-semibold text-foreground text-center">
+                  Quick Actions
+                </h2>
+                <div className="flex flex-col sm:flex-row gap-3">
+                  <Button 
+                    variant="outline" 
+                    size="lg" 
+                    className="flex-1 touch-target justify-start"
+                    onClick={() => setCurrentPage('chatbot')}
+                  >
+                    <Phone className="w-5 h-5 mr-3" />
+                    AI Support Chat
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    size="lg" 
+                    className="flex-1 touch-target justify-start"
+                    onClick={() => setCurrentPage('scanner')}
+                  >
+                    <Camera className="w-5 h-5 mr-3" />
+                    Start Face Scan
+                  </Button>
+                </div>
+              </div>
+            </main>
+          </div>
+        );
+    }
+  };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background to-muted">
-      {/* Header */}
-      <header className="bg-card/80 backdrop-blur-sm border-b border-border">
-        <div className="container mx-auto px-4 py-6">
-          <div className="text-center">
-            <div className="flex items-center justify-center space-x-3 mb-3">
-              <div className="bg-gradient-to-br from-primary to-accent p-3 rounded-full">
-                <Heart size={32} className="text-white" />
-              </div>
-              <h1 className="text-3xl-accessible font-bold text-foreground">
-                TechGuide Senior
-              </h1>
-            </div>
-            <p className="text-xl-accessible text-muted-foreground">
-              Your friendly guide to technology
-            </p>
-          </div>
-        </div>
-      </header>
-
-      {/* Main Navigation */}
-      <main className="container mx-auto px-4 py-8">
-        <div className="mb-8 text-center">
-          <h2 className="text-2xl-accessible font-semibold mb-3">
-            What would you like to learn today?
-          </h2>
-          <p className="text-lg text-muted-foreground">
-            Choose an option below to get started
-          </p>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
-          {navigationItems.map((item) => (
-            <NavigationCard
-              key={item.id}
-              title={item.title}
-              description={item.description}
-              icon={item.icon}
-              onClick={() => setCurrentPage(item.id)}
-              gradient={item.gradient}
-            />
-          ))}
-        </div>
-
-        {/* Quick Help Section */}
-        <div className="mt-12 bg-card p-6 rounded-xl border border-border max-w-2xl mx-auto">
-          <h3 className="text-xl-accessible font-semibold mb-4 text-center">
-            Need immediate help?
-          </h3>
-          <div className="space-y-3">
-            <button 
-              onClick={() => setCurrentPage('chatbot')}
-              className="w-full bg-primary/10 hover:bg-primary/20 text-primary p-4 rounded-lg transition-colors touch-target text-left"
-            >
-              <MessageCircle size={20} className="inline mr-3" />
-              Ask: "How do I make a phone call?"
-            </button>
-            <button 
-              onClick={() => setCurrentPage('scanner')}
-              className="w-full bg-accent/10 hover:bg-accent/20 text-accent p-4 rounded-lg transition-colors touch-target text-left"
-            >
-              <Scan size={20} className="inline mr-3" />
-              Scan any device to learn how to use it
-            </button>
-          </div>
-        </div>
-      </main>
+    <div className="relative">
+      {renderCurrentPage()}
+      <BottomNavigation 
+        currentPage={currentPage} 
+        onPageChange={(page) => setCurrentPage(page as Page)} 
+      />
     </div>
   );
 };
